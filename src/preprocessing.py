@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_PATH = PROJECT_ROOT / "datasets" / "raw" / "student-mat.csv"
@@ -35,11 +35,11 @@ def get_feature_sets(df):
 
 
 def build_preprocessor(df, features):
-    """One-hot encode text columns; pass numeric columns through unchanged."""
+    """One-hot encode text columns; standardize numeric columns."""
     part = df[features]
     cat_cols = part.select_dtypes(exclude="number").columns.tolist()
     num_cols = part.select_dtypes(include="number").columns.tolist()
     return ColumnTransformer([
         ("cat", OneHotEncoder(drop="if_binary", handle_unknown="ignore"), cat_cols),
-        ("num", "passthrough", num_cols),
+        ("num", StandardScaler(), num_cols),
     ])
