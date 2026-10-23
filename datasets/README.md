@@ -24,8 +24,9 @@
 - **Overlap with Mathematics file:** students present in both files are identified with the
   13-attribute rule in UCI's merge script (`student-merge.R`): school, sex, age, address,
   famsize, Pstatus, Medu, Fedu, Mjob, Fjob, reason, nursery, internet. The UCI script reports
-  382 joined rows. Because the join can match one student more than once, the number of unique
-  shared students is reported separately in the Results section.
+  382 joined rows. In this project, the join matched 374 unique Portuguese students, all of
+  which were removed before external validation, leaving 275. The difference from 382 is
+  because the join can match one student more than once.
 
 ## Data integrity
 
@@ -53,8 +54,10 @@ results generated from the synthetic file have been discarded. The synthetic fil
 
 - Data comes from two Portuguese secondary schools in one subject (Mathematics), so results may
   not transfer to other subjects, schools, or countries.
-- Some students have G3 = 0. These are often students who dropped out, not only low performers,
-  so the at_risk label mixes two different situations.
+- 38 students (about 10%) have G3 = 0, and all of them fall in the `at_risk` class. Thirteen of
+  them also have G2 = 0, which suggests they left before the second period. The label therefore
+  mixes students who withdrew with students who scored low. The paper reports results with these
+  students included, and a sensitivity analysis excluding them is planned.
 - G1 and G2 are strongly correlated with G3. Models that use them may mostly learn that low
   earlier grades predict low final grades.
 - The data is a single snapshot, so it cannot show how a student's risk changes over time.
