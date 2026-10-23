@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from preprocessing import load_data
@@ -13,6 +14,17 @@ FEATURES_PATH = MODELS_DIR / "model_a_features.joblib"
 # Two-tier flag: students in either tier are sent for support or review
 FLAG_TIERS = ["at_risk", "needs_review"]
 
+# Bands for the probability of needing attention (at_risk + needs_review).
+# Cutoffs were chosen from cross-validated calibration on training data only.
+BAND_CUTOFFS = (0.3, 0.8)
+BAND_NAMES = ("low", "moderate", "high")
+
+
+def risk_band(flag_probability):
+    """Map the probability of needing attention to a band."""
+    index = int(np.digitize(flag_probability, BAND_CUTOFFS))
+    return BAND_NAMES[index]
+
 
 def load_model():
     """Load the saved Model A pipeline and its feature list."""
@@ -24,7 +36,7 @@ def load_model():
 def predict_students(students, pipeline=None, features=None):
     """
     Score students and return their risk label, two-tier flag,
-    and the model's probability for each class.
+    probability band, and the model's probability for each class.
 
     `students` is a DataFrame with the Model A feature columns.
     The label G3 is not needed and is ignored.
@@ -40,19 +52,19 @@ def predict_students(students, pipeline=None, features=None):
     labels = pipeline.predict(X)
     probs = pipeline.predict_proba(X)
 
+    prob_df = pd.DataFrame(probs, columns=pipeline.classes_, index=students.index)
+    flag_prob = prob_df[FLAG_TIERS].sum(axis=1)
+
     result = pd.DataFrame(
         {
             "risk_label": labels,
             "flagged": pd.Series(labels).isin(FLAG_TIERS).values,
+            "band": [risk_band(p) for p in flag_prob],
+            "flag_probability": flag_prob.round(3).values,
         },
         index=students.index,
     )
-    prob_cols = pd.DataFrame(
-        probs,
-        columns=[f"p_{c}" for c in pipeline.classes_],
-        index=students.index,
-    )
-    return pd.concat([result, prob_cols], axis=1)
+    return pd.concat([result, prob_df.add_prefix("p_")], axis=1)
 
 
 if __name__ == "__main__":

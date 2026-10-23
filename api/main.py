@@ -61,6 +61,8 @@ class StudentFeatures(BaseModel):
 class PredictionResponse(BaseModel):
     risk_label: str
     flagged: bool
+    band: str
+    flag_probability: float
     probabilities: dict[str, float]
     note: str = NOTE
 
@@ -99,6 +101,8 @@ def predict(student: StudentFeatures):
     return PredictionResponse(
         risk_label=r["risk_label"],
         flagged=bool(r["flagged"]),
+        band=r["band"],
+        flag_probability=float(r["flag_probability"]),
         probabilities={
             key.removeprefix("p_"): float(r[key])
             for key in result.columns
