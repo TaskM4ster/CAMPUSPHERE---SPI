@@ -83,6 +83,22 @@ Model A two-tier flag on the test set: recall 0.849, precision 0.882, 51 of 79 s
 
 External validation (Model A trained on Mathematics, scored on Portuguese students not present in the Mathematics file): 374 unique students were removed as overlapping, leaving 275. Macro F1 is 0.653 (baseline 0.203). The two-tier flag has recall 0.932 and precision 0.868, flagging 204 of 275 students. The pre-set criterion (two-tier recall at least 0.80 and macro F1 above baseline) was met.
 
+## Probability bands
+
+Each student also receives a band based on the probability that they need attention
+(`at_risk` plus `needs_review`). The cutoffs, 0.3 and 0.8, were chosen from cross-validated
+probabilities on the training set only.
+
+| Band     | Probability   | Students (training) | Observed share needing attention |
+| -------- | ------------- | ------------------- | -------------------------------- |
+| low      | below 0.3     | 79                  | 0.18                             |
+| moderate | 0.3 to 0.8    | 58                  | 0.50                             |
+| high     | 0.8 and above | 179                 | 0.94                             |
+
+Bands are guidance for staff, not a second flag. A low band means a lower likelihood of needing
+attention, not no concern. The moderate band is close to a coin flip and calls for a review of
+the student's situation.
+
 **Note on the test set:** it has been used for several reported comparisons, including the baseline, Model B, and the final Model A evaluation, and it was rerun after scaling was added. Cross-validation results are the primary evidence for model choices.
 
 ## Setup
@@ -118,9 +134,15 @@ Then open `http://127.0.0.1:8000/docs` to test the API.
 
 ## Known limitations
 
-- 38 students have a final grade of 0. Thirteen of them also have G2 = 0, which suggests they left before the second period. They may have withdrawn rather than performed poorly. They are kept in the `at_risk` class. A sensitivity analysis excluding them is planned and not yet reported.
+- 38 students have a final grade of 0. Thirteen of them also have G2 = 0, which suggests they left
+  before the second period. They may have withdrawn rather than performed poorly. They are kept in
+  the `at_risk` class in the main results. A sensitivity analysis excluding them (357 students)
+  gives Model A 0.658 (±0.067) and Model B 0.810 (±0.063) in cross-validation. No students with
+  G2 = 0 remain after exclusion.
 - Attendance is a single total of absences, not per-subject or per-week data. Absences do not differ significantly across risk classes (Kruskal-Wallis p = 0.55).
-- G2 is strongly related to G3. Model B's gain over Model A may partly reflect students who left, not only weaker students.
+- G2 is strongly related to G3. Model B's gain over Model A does not depend on the students who
+  left: its cross-validated accuracy is unchanged when they are excluded. The gain reflects the
+  information in the second-period grade itself.
 - The data covers two schools and one academic year. Both files come from the same schools, so the external test checks transfer across subjects, not across schools or cohorts.
 - The test set has 79 students, so test scores can shift by several points with a different split.
 
