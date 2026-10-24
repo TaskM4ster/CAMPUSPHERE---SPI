@@ -54,11 +54,17 @@ def main():
         print(name)
 
         model = make_model(df, feats)
-        res = cross_validate(model, df.loc[train_idx, feats], y_train,
-                             cv=cv, scoring=["accuracy", "f1_macro"])
-        acc, f1 = res["test_accuracy"], res["test_f1_macro"]
-        print(f"\n5-fold CV (training set): accuracy={acc.mean():.3f} (±{acc.std():.3f}), "
-              f"macro F1={f1.mean():.3f} (±{f1.std():.3f})")
+        res = cross_validate(
+               model, df.loc[train_idx, feats], y_train, cv=cv,
+               scoring=["accuracy", "precision_macro", "recall_macro", "f1_macro"],
+           )
+        print("\n5-fold CV (training set), mean (SD across folds):")
+        for label, key in [("Accuracy", "test_accuracy"),
+                              ("Macro precision", "test_precision_macro"),
+                              ("Macro recall", "test_recall_macro"),
+                              ("Macro F1", "test_f1_macro")]:
+               v = res[key]
+               print(f"  {label:<16} {v.mean():.3f} (±{v.std():.3f})")
 
         model.fit(df.loc[train_idx, feats], y_train)
         pred = model.predict(df.loc[test_idx, feats])
